@@ -1,4 +1,4 @@
-name: Supabase Keep Alive - Jokbo
+name: Supabase Keep Alive - Jokbo & Gyesang
 
 on:
   schedule:
@@ -17,3 +17,12 @@ jobs:
             "${{ secrets.SUPABASE_URL }}/rest/v1/jokbo_persons?select=count&limit=1")
           echo "Response: $RESPONSE"
           echo "✅ Jokbo DB Ping 완료"
+
+      - name: Ping Gyesang DB
+        run: |
+          RESPONSE=$(curl -s \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/members?select=count&limit=1")
+          echo "Response: $RESPONSE"
+          echo "✅ Gyesang DB Ping 완료"
