@@ -1,17 +1,21 @@
 name: Supabase Keep Alive - Jokbo & Gyesang
-
 on:
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: '0 0 */3 * *'   # 3일마다
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Ping Jokbo DB
         run: |
-          RESPONSE=$(curl -s \
+          RESPONSE=$(curl -sf \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             "${{ secrets.SUPABASE_URL }}/rest/v1/jokbo_persons?select=count&limit=1")
@@ -20,9 +24,18 @@ jobs:
 
       - name: Ping Gyesang DB
         run: |
-          RESPONSE=$(curl -s \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/members?select=count&limit=1")
+          RESPONSE=$(curl -sf \
+            -H "apikey: ${{ secrets.GYESANG_SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.GYESANG_SUPABASE_ANON_KEY }}" \
+            "${{ secrets.GYESANG_SUPABASE_URL }}/rest/v1/members?select=count&limit=1")
           echo "Response: $RESPONSE"
           echo "✅ Gyesang DB Ping 완료"
+
+      - name: Keep repo active (60일 비활성화 방지)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          date > .last-ping
+          git add .last-ping
+          git commit -m "keep-alive: $(date -u +%Y-%m-%d)" || echo "no changes"
+          git push
